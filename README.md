@@ -10,7 +10,7 @@ This is an implementation of LSTM network using PyTorch for Time Series Analysis
 # How to Run
 There are two ways to access the dashboard:
 
-# 1. Live Demo : 
+# 1. Live Demo : https://fetch-rewards-mle.streamlit.app/      
 
 - Here, If you are prompted with: 
 `"This app has gone to sleep due to inactivity. Would you like to wake it back up?"`
