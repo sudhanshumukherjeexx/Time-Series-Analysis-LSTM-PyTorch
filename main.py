@@ -1,21 +1,19 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torch.optim as optim
-from torch.utils.data import DataLoader, TensorDataset, Dataset
+from torch.utils.data import DataLoader, Dataset
 import plotly.express as px
 import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 from sklearn.preprocessing import MinMaxScaler
-import datetime
 
 st.markdown('## Fetch Rewards - Machine Learning Engineer')
 st.markdown('### Take-Home Exercise')
 st.markdown('`Live Demo: Every refresh executes new results`')
+st.markdown('### GitHub Repo: [🔥](https://github.com/sudhanshumukherjeexx/Time-Series-Analysis-LSTM-PyTorch)')
 st.divider()
 st.markdown('### Problem Statement')
 st.write('At fetch, we are monitoring the number of scanned receipts to our app on a daily base as one of our KPIs. From a business standpoint, we sometimes need to predict the possible number of scanned receipts for a given future month. The data available provides the number of observed scanned receipts each day for the year 2021.')
@@ -36,13 +34,14 @@ with col2:
     st.write(dataframe.dtypes)
     st.markdown('### Missing Value Count')
     st.write(dataframe.isnull().sum())
-st.markdown('**We can notice that, there are only two features given to us - out of which one is Target Variable, It is hard to build a machine learning model with just two features.**')
-st.markdown('**To address this problem, let"s create more features which we can use in our machine learning model.**')
+
+st.markdown("**To address this problem, let's create more features which we can use in our machine learning model.**")
 st.divider()
 
 # Feature Creation and Transformation
 st.markdown("### Feature Creature and Transformation")
 
+#function to get season based on Month
 def get_season(month):
     if 3 <= month <=5:
         return 0 #Spring
@@ -56,13 +55,8 @@ def get_season(month):
 
 
 dataframe['# Date'] = pd.to_datetime(dataframe['# Date'])
-# #--------------------------New dataframe with Dates - 2022 ------------------
-# last_date = dataframe['# Date'].max()
-# new_dates = pd.date_range(last_date + pd.Timedelta(days=1), '2022-12-31')
-# new_dates_df = pd.DataFrame({'# Date': new_dates})
-# dataframe_1 = pd.concat([dataframe, new_dates_df], ignore_index=True)
-# #--------------------------New dataframe with Dates - 2022 ------------------
 
+# function to generate additional columns to the dataframe
 def transform_data(dataframe):
     dataframe['Year'] = dataframe['# Date'].dt.year
     dataframe['Month'] = dataframe['# Date'].dt.month
@@ -76,32 +70,28 @@ def transform_data(dataframe):
     return dataframe
 
 df = transform_data(dataframe)
-
 st.dataframe(df, use_container_width=True)
 
 st.markdown('### New Columns Added')
 st.write(df.columns)
 
-#Distribution of Receipt Count
+# Distribution of Receipt Count (Histogram)
 st.markdown("### Distribution of Receipt Count")
 fig = px.histogram(df, x='Receipt_Count', title=f'Distribution of Receipt Count')
 st.plotly_chart(fig)
 
 
-#Distribution of Receipt Count
+# Receipt Count in the year 2021
 st.markdown("### Distribution of Receipt Count")
 fig = px.line(df, x='# Date', y='Receipt_Count' , title=f'Distribution of Receipt Count')
 st.plotly_chart(fig)
 
-
+# GPU
 device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 st.markdown(f"### Device Available for Model Training: `{device}`")
 
 # Setting Date as an Index
 df.set_index('# Date', inplace=True)
-#st.dataframe(df.head())
-
-
 
 # Features to Numpy
 df_numpy = df.to_numpy()
@@ -115,11 +105,10 @@ df_numpy = scaler.fit_transform(df_numpy)
 st.markdown('#### Feature Scaling')
 st.dataframe(df_numpy)
 
-# Train and Test Data
+# Train and Test Split
 X = df_numpy[:, 1:]
 y = df_numpy[:, 0]
 st.markdown(f'#### X Shape: `{X.shape}` and y Shape: `{y.shape}`')
-
 
 X = np.flip(X, axis=1)
 
@@ -144,6 +133,7 @@ y_test = y_test.reshape((-1, 1))
 st.markdown(f'**X_train Shape:** `{X_train.shape}`, **X_test Shape:** `{X_test.shape}`')
 st.markdown(f'**y_train Shape:** `{y_train.shape}`, **y_test Shape:** `{y_test.shape}`')
 
+# features to tensors
 X_train = torch.tensor(X_train.copy()).float()
 y_train = torch.tensor(y_train).float()
 X_test = torch.tensor(X_test.copy()).float()
